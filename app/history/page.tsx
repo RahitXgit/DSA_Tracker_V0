@@ -40,7 +40,7 @@ export default function History() {
 
     const fetchProfile = async () => {
         if (!user) return
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
             .from('users')
             .select('username')
             .eq('id', user.id)
@@ -53,7 +53,7 @@ export default function History() {
 
     const fetchHistory = async () => {
         setLoading(true)
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
             .from('daily_plans')
             .select('*')
             .eq('user_id', user!.id)

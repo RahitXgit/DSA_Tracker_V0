@@ -15,6 +15,7 @@ interface DailyPlan {
     status: 'PLANNED' | 'DONE' | 'SKIPPED'
     planned_date: string
     user_id: string
+    completed_at?: string  // Optional timestamp for when task was completed
 }
 
 export default function Dashboard() {
@@ -55,14 +56,14 @@ export default function Dashboard() {
         const tomorrow = getISTDate(1)
 
         // Count today
-        const { count: countToday, error: errorToday } = await supabase
+        const { count: countToday, error: errorToday } = await (supabase as any)
             .from('daily_plans')
             .select('*', { count: 'exact', head: true })
             .eq('user_id', user.id)
             .eq('planned_date', today)
 
         // Count tomorrow
-        const { count: countTomorrow, error: errorTomorrow } = await supabase
+        const { count: countTomorrow, error: errorTomorrow } = await (supabase as any)
             .from('daily_plans')
             .select('*', { count: 'exact', head: true })
             .eq('user_id', user.id)
@@ -91,7 +92,7 @@ export default function Dashboard() {
 
         console.log(`Fetching ${mode} plans for date:`, date)
 
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
             .from('daily_plans')
             .select('*')
             .eq('user_id', user!.id)
@@ -115,7 +116,7 @@ export default function Dashboard() {
         const today = getISTDate(0)
 
         // 1. Check if there are any past incomplete tasks
-        const { data: pastTasks, error: checkError } = await supabase
+        const { data: pastTasks, error: checkError } = await (supabase as any)
             .from('daily_plans')
             .select('id')
             .eq('user_id', user.id)
@@ -129,7 +130,7 @@ export default function Dashboard() {
 
         if (pastTasks && pastTasks.length > 0) {
             // 2. Roll them over
-            const { error: updateError } = await supabase
+            const { error: updateError } = await (supabase as any)
                 .from('daily_plans')
                 .update({ planned_date: today })
                 .eq('user_id', user.id)
@@ -198,14 +199,14 @@ export default function Dashboard() {
 
     const fetchProfile = async () => {
         if (!user) return
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
             .from('users')
             .select('username')
             .eq('id', user.id)
             .single()
 
         if (!error && data) {
-            setUsername(data.username)
+            setUsername((data as any).username)
         }
     }
 
@@ -214,7 +215,7 @@ export default function Dashboard() {
         e.preventDefault()
         const today = getISTDate(0)
 
-        const { error } = await supabase
+        const { error } = await (supabase as any)
             .from('daily_plans')
             .insert({
                 user_id: user!.id,
@@ -238,7 +239,7 @@ export default function Dashboard() {
 
     // Mark complete
     const markComplete = async (id: string) => {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
             .from('daily_plans')
             .update({
                 status: 'DONE',
@@ -259,7 +260,7 @@ export default function Dashboard() {
     const markSkip = async (id: string) => {
         const tomorrow = getISTDate(1)
 
-        const { error } = await supabase
+        const { error } = await (supabase as any)
             .from('daily_plans')
             .update({
                 status: 'SKIPPED',

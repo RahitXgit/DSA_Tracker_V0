@@ -25,7 +25,7 @@ export default function Login() {
                 // Check if user has pending approval
                 const { data: { user } } = await supabase.auth.getUser()
                 if (user) {
-                    const { data: approval } = await supabase
+                    const { data: approval } = await (supabase as any)
                         .from('user_approvals')
                         .select('status')
                         .eq('user_id', user.id)

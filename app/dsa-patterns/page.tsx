@@ -64,7 +64,7 @@ export default function DSAPatternsPage() {
             setLoading(true)
 
             // Fetch categories
-            const { data: categoriesData, error: catError } = await supabase
+            const { data: categoriesData, error: catError } = await (supabase as any)
                 .from('dsa_categories')
                 .select('*')
                 .order('display_order')
@@ -72,7 +72,7 @@ export default function DSAPatternsPage() {
             if (catError) throw catError
 
             // Fetch patterns
-            const { data: patternsData, error: patError } = await supabase
+            const { data: patternsData, error: patError } = await (supabase as any)
                 .from('dsa_patterns')
                 .select('*')
                 .order('display_order')
@@ -80,7 +80,7 @@ export default function DSAPatternsPage() {
             if (patError) throw patError
 
             // Fetch problems
-            const { data: problemsData, error: probError } = await supabase
+            const { data: problemsData, error: probError } = await (supabase as any)
                 .from('dsa_problems')
                 .select('*')
                 .order('display_order')
@@ -88,13 +88,13 @@ export default function DSAPatternsPage() {
             if (probError) throw probError
 
             // Organize data hierarchically
-            const organizedCategories = categoriesData.map(cat => ({
+            const organizedCategories = categoriesData.map((cat: any) => ({
                 ...cat,
                 patterns: patternsData
-                    .filter(pat => pat.category_id === cat.id)
-                    .map(pat => ({
+                    .filter((pat: any) => pat.category_id === cat.id)
+                    .map((pat: any) => ({
                         ...pat,
-                        problems: problemsData.filter(prob => prob.pattern_id === pat.id)
+                        problems: problemsData.filter((prob: any) => prob.pattern_id === pat.id)
                     }))
             }))
 
@@ -116,7 +116,7 @@ export default function DSAPatternsPage() {
         if (!user) return
 
         try {
-            const { data, error } = await supabase
+            const { data, error } = await (supabase as any)
                 .from('user_problem_progress')
                 .select('problem_id, status, last_solved_at, revision_count')
                 .eq('user_id', user.id)
@@ -124,7 +124,7 @@ export default function DSAPatternsPage() {
             if (error) throw error
 
             const progressMap = new Map<string, ProblemProgress>()
-            data?.forEach(item => {
+            data?.forEach((item: any) => {
                 progressMap.set(item.problem_id, item)
             })
             setUserProgress(progressMap)
@@ -170,7 +170,7 @@ export default function DSAPatternsPage() {
 
             if (isSolved) {
                 // Mark as not solved - delete the record
-                const { error } = await supabase
+                const { error } = await (supabase as any)
                     .from('user_problem_progress')
                     .delete()
                     .eq('user_id', user.id)
@@ -189,7 +189,7 @@ export default function DSAPatternsPage() {
 
                 if (currentProgress) {
                     // Update existing record
-                    const { error } = await supabase
+                    const { error } = await (supabase as any)
                         .from('user_problem_progress')
                         .update({
                             status: 'solved',
@@ -212,7 +212,7 @@ export default function DSAPatternsPage() {
                     setUserProgress(newProgress)
                 } else {
                     // Insert new record
-                    const { error } = await supabase
+                    const { error } = await (supabase as any)
                         .from('user_problem_progress')
                         .insert({
                             user_id: user.id,
