@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase-admin"
+import { sendApprovalEmail } from '@/lib/email'
 
 const ADMIN_EMAIL = 'rahitdhara.main@gmail.com'
 
@@ -81,7 +82,6 @@ export async function PATCH(req: Request) {
                     .single()
 
                 if (userData) {
-                    const { sendApprovalEmail } = await import('@/lib/email')
                     await sendApprovalEmail(updatedApproval.email, userData.username)
                     console.log('Approval email sent to:', updatedApproval.email)
                 }
