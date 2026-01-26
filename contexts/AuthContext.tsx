@@ -49,7 +49,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     const signOut = async () => {
-        await nextAuthSignOut({ callbackUrl: '/login' })
+        await nextAuthSignOut({ redirect: true })
+        window.location.href = '/login'
     }
 
     if (status === 'loading') {

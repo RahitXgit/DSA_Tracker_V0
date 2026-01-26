@@ -13,10 +13,25 @@ const globalForSupabase = globalThis as unknown as {
     supabase: ReturnType<typeof createSupabaseClient> | undefined
 }
 
+// Create a mock client for build time
+const createMockClient = () => ({
+    from: () => ({
+        select: () => Promise.resolve({ data: null, error: null }),
+        insert: () => Promise.resolve({ data: null, error: null }),
+        update: () => Promise.resolve({ data: null, error: null }),
+        delete: () => Promise.resolve({ data: null, error: null }),
+    }),
+    auth: {
+        getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+        signIn: () => Promise.resolve({ data: null, error: null }),
+        signOut: () => Promise.resolve({ error: null }),
+    }
+}) as any
+
 // Only create client if we have valid credentials
 export const supabase = (supabaseUrl && supabaseAnonKey)
     ? (globalForSupabase.supabase ?? createSupabaseClient(supabaseUrl, supabaseAnonKey))
-    : null as any
+    : createMockClient()
 
 if (process.env.NODE_ENV !== 'production' && supabase) {
     globalForSupabase.supabase = supabase
