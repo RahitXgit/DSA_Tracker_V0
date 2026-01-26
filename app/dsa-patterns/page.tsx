@@ -296,13 +296,13 @@ export default function DSAPatternsPage() {
                         {/* Header */}
                         <div className="glassmorphism p-8 mb-8">
                             <div className="flex items-center gap-4 mb-4">
-                                <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center">
+                                <div className="w-16 h-16 gradient-primary rounded-2xl flex items-center justify-center shadow-medium">
                                     <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                                     </svg>
                                 </div>
                                 <div>
-                                    <h1 className="text-4xl font-bold">DSA Patterns</h1>
+                                    <h1 className="text-4xl font-bold gradient-text">DSA Patterns</h1>
                                     <p className="text-muted-foreground mt-2">
                                         Master {totalProblems} problems across {categories.length} categories and{' '}
                                         {categories.reduce((sum, cat) => sum + cat.patterns.length, 0)} patterns
@@ -318,7 +318,7 @@ export default function DSAPatternsPage() {
                                         placeholder="🔍 Search problems..."
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-full px-4 py-3 bg-background border-4 border-black shadow-[4px_4px_0px_#000] focus:outline-none focus:shadow-[6px_6px_0px_#000] transition-all"
+                                        className="w-full"
                                     />
                                 </div>
                                 <div className="flex gap-2">
@@ -326,12 +326,12 @@ export default function DSAPatternsPage() {
                                         <button
                                             key={diff}
                                             onClick={() => setDifficultyFilter(diff)}
-                                            className={`px-4 py-3 border-4 border-black font-bold transition-all ${difficultyFilter === diff
-                                                ? 'bg-primary text-black shadow-[4px_4px_0px_#000]'
-                                                : 'bg-muted hover:shadow-[4px_4px_0px_#000]'
+                                            className={`px-4 py-3 rounded-xl font-bold transition-all ${difficultyFilter === diff
+                                                ? 'gradient-primary text-white shadow-medium'
+                                                : 'bg-muted hover:shadow-soft hover:scale-[1.02]'
                                                 }`}
                                         >
-                                            {diff.toUpperCase()}
+                                            {diff}
                                         </button>
                                     ))}
                                 </div>
@@ -348,7 +348,7 @@ export default function DSAPatternsPage() {
                                         className="w-full p-6 flex items-center justify-between hover:bg-muted/30 transition-colors rounded-lg"
                                     >
                                         <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center text-white font-bold text-xl">
+                                            <div className="w-12 h-12 gradient-primary rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-soft">
                                                 {category.name.charAt(0)}
                                             </div>
                                             <div className="text-left">

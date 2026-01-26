@@ -63,11 +63,11 @@ export default function Login() {
                 <div className="text-center mb-8">
                     <div className="flex flex-col items-center justify-center gap-4 mb-4">
                         <span className="text-6xl">🎮</span>
-                        <h1 className="text-3xl font-bold text-primary text-center">
-                            DSA TRACKER
+                        <h1 className="text-3xl font-bold gradient-text text-center">
+                            DSA Tracker
                         </h1>
                     </div>
-                    <p className="text-foreground font-bold text-center">PLAN. TRACK. MASTER DSA.</p>
+                    <p className="text-foreground font-semibold text-center">Plan. Track. Master DSA.</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
@@ -111,7 +111,7 @@ export default function Login() {
                         <div className="text-right">
                             <a
                                 href="/forgot-password"
-                                className="text-sm text-primary hover:underline font-semibold"
+                                className="text-sm text-primary hover:underline font-semibold transition-all"
                             >
                                 Forgot Password?
                             </a>
@@ -123,7 +123,7 @@ export default function Login() {
                         disabled={loading}
                         className="w-full btn btn-primary"
                     >
-                        {loading ? 'LOADING...' : (isLogin ? 'LOGIN' : 'CREATE ACCOUNT')}
+                        {loading ? 'Loading...' : (isLogin ? 'Login' : 'Create Account')}
                     </button>
                 </form>
 
@@ -132,9 +132,9 @@ export default function Login() {
                         type="button"
                         onClick={() => setIsLogin(!isLogin)}
                         disabled={loading}
-                        className="text-secondary hover:text-primary font-bold transition-colors"
+                        className="text-secondary hover:gradient-text font-bold transition-all"
                     >
-                        {isLogin ? "DON'T HAVE AN ACCOUNT? SIGN UP" : 'ALREADY HAVE AN ACCOUNT? LOGIN'}
+                        {isLogin ? "Don't have an account? Sign Up" : 'Already have an account? Login'}
                     </button>
                 </div>
             </div>

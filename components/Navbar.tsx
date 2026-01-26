@@ -13,8 +13,8 @@ export default function Navbar({ user, signOut, username }: NavbarProps) {
 
     const isActive = (path: string) => {
         return pathname === path
-            ? 'bg-primary text-white rounded-lg shadow-md'
-            : 'text-muted-foreground hover:text-primary hover:bg-muted rounded-lg transition-all'
+            ? 'gradient-primary text-white rounded-xl shadow-medium'
+            : 'text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-xl transition-all'
     }
 
     return (
@@ -23,8 +23,8 @@ export default function Navbar({ user, signOut, username }: NavbarProps) {
                 <div className="flex flex-col sm:flex-row items-center gap-6 sm:gap-8">
                     <Link href="/dashboard" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                         <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-lg"></div>
-                            <h1 className="text-xl sm:text-2xl font-bold text-gradient">
+                            <div className="w-8 h-8 gradient-primary rounded-xl shadow-soft"></div>
+                            <h1 className="text-xl sm:text-2xl font-bold gradient-text">
                                 DSA Tracker
                             </h1>
                         </div>
@@ -61,8 +61,8 @@ export default function Navbar({ user, signOut, username }: NavbarProps) {
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-muted rounded-lg">
-                        <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center text-white text-sm font-bold">
+                    <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-muted rounded-xl shadow-soft">
+                        <div className="w-8 h-8 gradient-primary rounded-full flex items-center justify-center text-white text-sm font-bold shadow-soft">
                             {(username || user?.email?.split('@')[0] || 'U').charAt(0).toUpperCase()}
                         </div>
                         <span className="text-foreground font-semibold text-sm">

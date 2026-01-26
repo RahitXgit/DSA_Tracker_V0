@@ -2,7 +2,6 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
 import Navbar from '@/components/Navbar'
 
 interface DailyPlan {
@@ -40,54 +39,58 @@ export default function History() {
 
     const fetchProfile = async () => {
         if (!user) return
-        const { data, error } = await (supabase as any)
-            .from('users')
-            .select('username')
-            .eq('id', user.id)
-            .single()
 
-        if (!error && data) {
-            setUsername(data.username)
+        try {
+            const response = await fetch('/api/user/profile')
+            const data = await response.json()
+
+            if (response.ok && data.username) {
+                setUsername(data.username)
+            }
+        } catch (error) {
+            console.error('Error fetching profile:', error)
         }
     }
 
     const fetchHistory = async () => {
         setLoading(true)
-        const { data, error } = await (supabase as any)
-            .from('daily_plans')
-            .select('*')
-            .eq('user_id', user!.id)
-            .eq('status', 'DONE')
-            .order('completed_at', { ascending: false })
 
-        if (error) {
-            console.error('Error fetching history:', error)
-        } else {
-            // Group by date
-            const grouped = (data || []).reduce((acc: GroupedPlans, plan: DailyPlan) => {
-                // Use completed_at date if available, otherwise planned_date
-                const dateKey = plan.completed_at
-                    ? new Date(plan.completed_at).toLocaleDateString('en-US', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                    })
-                    : new Date(plan.planned_date).toLocaleDateString('en-US', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                    })
+        try {
+            const response = await fetch('/api/daily-plans/history')
+            const result = await response.json()
 
-                if (!acc[dateKey]) {
-                    acc[dateKey] = []
-                }
-                acc[dateKey].push(plan)
-                return acc
-            }, {})
-            setHistory(grouped)
+            if (response.ok) {
+                // Group by date
+                const grouped = (result.data || []).reduce((acc: GroupedPlans, plan: DailyPlan) => {
+                    // Use completed_at date if available, otherwise planned_date
+                    const dateKey = plan.completed_at
+                        ? new Date(plan.completed_at).toLocaleDateString('en-US', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        })
+                        : new Date(plan.planned_date).toLocaleDateString('en-US', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        })
+
+                    if (!acc[dateKey]) {
+                        acc[dateKey] = []
+                    }
+                    acc[dateKey].push(plan)
+                    return acc
+                }, {})
+                setHistory(grouped)
+            } else {
+                console.error('Error fetching history:', result.error)
+            }
+        } catch (error) {
+            console.error('Network error:', error)
         }
+
         setLoading(false)
     }
 

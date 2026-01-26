@@ -2,7 +2,6 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
 import { toast } from 'react-hot-toast'
 import Navbar from '@/components/Navbar'
 
@@ -55,35 +54,23 @@ export default function Dashboard() {
         const today = getISTDate(0)
         const tomorrow = getISTDate(1)
 
-        // Count today
-        const { count: countToday, error: errorToday } = await (supabase as any)
-            .from('daily_plans')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', user.id)
-            .eq('planned_date', today)
+        try {
+            const response = await fetch(`/api/daily-plans/counts?today=${today}&tomorrow=${tomorrow}`)
+            const data = await response.json()
 
-        // Count tomorrow
-        const { count: countTomorrow, error: errorTomorrow } = await (supabase as any)
-            .from('daily_plans')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', user.id)
-            .eq('planned_date', tomorrow)
-
-        if (!errorToday) setTodayCount(countToday || 0)
-        if (!errorTomorrow) setTomorrowCount(countTomorrow || 0)
+            if (response.ok) {
+                setTodayCount(data.today || 0)
+                setTomorrowCount(data.tomorrow || 0)
+            } else {
+                console.error('Failed to fetch counts:', data.error)
+            }
+        } catch (error) {
+            console.error('Error fetching counts:', error)
+        }
     }
 
     // Fetch plans (today or tomorrow)
     const fetchPlans = async (mode: 'today' | 'tomorrow' = 'today') => {
-        // Don't set viewMode here if we want to call this for refreshing current view
-        // But the original code did setViewMode. 
-        // Better pattern: use viewMode state for fetching appropriate data
-
-        // If mode passed, update state, otherwise use current state (though arg is required in orig)
-        // We will keep original signature but ensure we fetch proper data
-
-        // Optimally, we just fetch plans for the requested mode
-
         setLoading(true)
 
         const date = mode === 'today'
@@ -92,19 +79,22 @@ export default function Dashboard() {
 
         console.log(`Fetching ${mode} plans for date:`, date)
 
-        const { data, error } = await (supabase as any)
-            .from('daily_plans')
-            .select('*')
-            .eq('user_id', user!.id)
-            .eq('planned_date', date)
+        try {
+            const response = await fetch(`/api/daily-plans?date=${date}`)
+            const result = await response.json()
 
-        if (error) {
-            console.error('Fetch error:', error)
-            toast.error(`Failed to fetch ${mode} plans: ${error.message}`)
-        } else {
-            console.log(`${mode} plans found:`, data)
-            setPlans(data || [])
+            if (response.ok) {
+                console.log(`${mode} plans found:`, result.data)
+                setPlans(result.data || [])
+            } else {
+                console.error('Fetch error:', result.error)
+                toast.error(`Failed to fetch ${mode} plans: ${result.error}`)
+            }
+        } catch (error) {
+            console.error('Network error:', error)
+            toast.error(`Network error fetching ${mode} plans`)
         }
+
         setLoading(false)
         fetchCounts() // Update counts whenever we fetch plans
     }
@@ -115,37 +105,28 @@ export default function Dashboard() {
 
         const today = getISTDate(0)
 
-        // 1. Check if there are any past incomplete tasks
-        const { data: pastTasks, error: checkError } = await (supabase as any)
-            .from('daily_plans')
-            .select('id')
-            .eq('user_id', user.id)
-            .lt('planned_date', today)
-            .eq('status', 'PLANNED')
+        try {
+            const response = await fetch('/api/daily-plans/rollover', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ today })
+            })
 
-        if (checkError) {
-            console.error('Error checking past tasks:', checkError)
-            return
-        }
+            const data = await response.json()
 
-        if (pastTasks && pastTasks.length > 0) {
-            // 2. Roll them over
-            const { error: updateError } = await (supabase as any)
-                .from('daily_plans')
-                .update({ planned_date: today })
-                .eq('user_id', user.id)
-                .lt('planned_date', today)
-                .eq('status', 'PLANNED')
-
-            if (updateError) {
-                console.error('Error rolling over tasks:', updateError)
-                toast.error('Failed to auto-rollover tasks')
-            } else {
-                toast.success(`🔄 Auto-moved ${pastTasks.length} pending tasks to Today!`, {
+            if (response.ok && data.rolled_over > 0) {
+                toast.success(`🔄 Auto-moved ${data.rolled_over} pending tasks to Today!`, {
                     duration: 5000,
                     icon: '📅'
                 })
+            } else if (!response.ok) {
+                console.error('Rollover error:', data.error)
             }
+        } catch (error) {
+            console.error('Error rolling over tasks:', error)
+            toast.error('Failed to auto-rollover tasks')
         }
     }
 
@@ -199,14 +180,16 @@ export default function Dashboard() {
 
     const fetchProfile = async () => {
         if (!user) return
-        const { data, error } = await (supabase as any)
-            .from('users')
-            .select('username')
-            .eq('id', user.id)
-            .single()
 
-        if (!error && data) {
-            setUsername((data as any).username)
+        try {
+            const response = await fetch('/api/user/profile')
+            const data = await response.json()
+
+            if (response.ok && data.username) {
+                setUsername(data.username)
+            }
+        } catch (error) {
+            console.error('Error fetching profile:', error)
         }
     }
 
@@ -215,44 +198,64 @@ export default function Dashboard() {
         e.preventDefault()
         const today = getISTDate(0)
 
-        const { error } = await (supabase as any)
-            .from('daily_plans')
-            .insert({
-                user_id: user!.id,
-                problem_title: newPlan.problem_title,
-                topic: newPlan.topic,
-                platform: newPlan.platform,
-                difficulty: newPlan.difficulty,
-                planned_date: today,
-                status: 'PLANNED'
+        try {
+            const response = await fetch('/api/daily-plans', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    problem_title: newPlan.problem_title,
+                    topic: newPlan.topic,
+                    platform: newPlan.platform,
+                    difficulty: newPlan.difficulty,
+                    planned_date: today
+                })
             })
 
-        if (error) {
-            toast.error(`Error: ${error.message}`)
-        } else {
-            toast.success('✅ Added to today!')
-            setNewPlan({ problem_title: '', topic: '', platform: 'LeetCode', difficulty: 'Medium' })
-            fetchPlans('today') // Refresh list
-            fetchCounts() // Refresh counts
+            const result = await response.json()
+
+            if (response.ok) {
+                toast.success('✅ Added to today!')
+                setNewPlan({ problem_title: '', topic: '', platform: 'LeetCode', difficulty: 'Medium' })
+                fetchPlans('today') // Refresh list
+                fetchCounts() // Refresh counts
+            } else {
+                toast.error(`Error: ${result.error}`)
+            }
+        } catch (error) {
+            console.error('Network error:', error)
+            toast.error('Failed to add plan')
         }
     }
 
     // Mark complete
     const markComplete = async (id: string) => {
-        const { error } = await (supabase as any)
-            .from('daily_plans')
-            .update({
-                status: 'DONE',
-                completed_at: new Date().toISOString()
+        try {
+            const response = await fetch('/api/daily-plans', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    id,
+                    status: 'DONE',
+                    completed_at: new Date().toISOString()
+                })
             })
-            .eq('id', id)
 
-        if (error) {
+            const result = await response.json()
+
+            if (response.ok) {
+                toast.success('✅ Done!')
+                fetchPlans(viewMode)
+                fetchCounts()
+            } else {
+                toast.error(`Failed to mark complete: ${result.error}`)
+            }
+        } catch (error) {
+            console.error('Network error:', error)
             toast.error('Failed to mark complete')
-        } else {
-            toast.success('✅ Done!')
-            fetchPlans(viewMode)
-            fetchCounts()
         }
     }
 
@@ -260,21 +263,32 @@ export default function Dashboard() {
     const markSkip = async (id: string) => {
         const tomorrow = getISTDate(1)
 
-        const { error } = await (supabase as any)
-            .from('daily_plans')
-            .update({
-                status: 'SKIPPED',
-                planned_date: tomorrow  // ✅ MOVES TO TOMORROW IMMEDIATELY
+        try {
+            const response = await fetch('/api/daily-plans', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    id,
+                    status: 'SKIPPED',
+                    planned_date: tomorrow  // ✅ MOVES TO TOMORROW IMMEDIATELY
+                })
             })
-            .eq('id', id)
 
-        if (error) {
-            console.error('Skip error:', error)
+            const result = await response.json()
+
+            if (response.ok) {
+                toast.success('⏭️ Moved to tomorrow!')
+                fetchPlans(viewMode)
+                fetchCounts()
+            } else {
+                console.error('Skip error:', result.error)
+                toast.error('Failed to skip')
+            }
+        } catch (error) {
+            console.error('Network error:', error)
             toast.error('Failed to skip')
-        } else {
-            toast.success('⏭️ Moved to tomorrow!')
-            fetchPlans(viewMode)
-            fetchCounts()
         }
     }
 
@@ -291,7 +305,7 @@ export default function Dashboard() {
                 <div className="glassmorphism p-8 mb-8">
                     <div className="flex items-center gap-4 mb-6">
                         <span className="text-5xl">📅</span>
-                        <h2 className="text-2xl font-bold text-primary">TODAY'S PLAN</h2>
+                        <h2 className="text-2xl font-bold gradient-text">Today's Plan</h2>
                     </div>
 
                     <form onSubmit={addPlan} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
@@ -338,15 +352,15 @@ export default function Dashboard() {
 
 
                     {/* Today/Tomorrow Tabs */}
-                    <div className="flex flex-col sm:flex-row gap-4 mb-6 bg-muted p-4 border-4 border-black shadow-[6px_6px_0px_#000]">
+                    <div className="flex flex-col sm:flex-row gap-4 mb-6">
                         <button
                             onClick={() => {
                                 setViewMode('today')
                                 fetchPlans('today')
                             }}
-                            className={`flex-1 px-6 py-4 font-bold text-base transition-all border-4 border-black ${viewMode === 'today'
-                                ? 'bg-primary text-primary-foreground shadow-[6px_6px_0px_#000] translate-x-[-2px] translate-y-[-2px]'
-                                : 'bg-card text-muted-foreground shadow-[4px_4px_0px_#000] hover:shadow-[6px_6px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px]'
+                            className={`flex-1 px-6 py-4 font-bold text-base transition-all rounded-xl ${viewMode === 'today'
+                                ? 'gradient-primary text-white shadow-large'
+                                : 'bg-card text-muted-foreground shadow-soft hover:shadow-medium hover:scale-[1.02]'
                                 }`}
                         >
                             📅 TODAY ({todayCount})
@@ -356,9 +370,9 @@ export default function Dashboard() {
                                 setViewMode('tomorrow')
                                 fetchPlans('tomorrow')
                             }}
-                            className={`flex-1 px-6 py-4 font-bold text-base transition-all border-4 border-black ${viewMode === 'tomorrow'
-                                ? 'bg-secondary text-secondary-foreground shadow-[6px_6px_0px_#000] translate-x-[-2px] translate-y-[-2px]'
-                                : 'bg-card text-muted-foreground shadow-[4px_4px_0px_#000] hover:shadow-[6px_6px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px]'
+                            className={`flex-1 px-6 py-4 font-bold text-base transition-all rounded-xl ${viewMode === 'tomorrow'
+                                ? 'gradient-secondary text-white shadow-large'
+                                : 'bg-card text-muted-foreground shadow-soft hover:shadow-medium hover:scale-[1.02]'
                                 }`}
                         >
                             ⏭️ TOMORROW ({tomorrowCount})
@@ -368,18 +382,18 @@ export default function Dashboard() {
                     {/* Plans List */}
                     {loading ? (
                         <div className="flex flex-col items-center justify-center py-12 gap-4">
-                            <div className="pixel-spinner"></div>
-                            <p className="font-bold text-primary animate-pulse">LOADING...</p>
+                            <div className="spinner"></div>
+                            <p className="font-bold gradient-text">Loading...</p>
                         </div>
                     ) : (
                         <div className="space-y-4">
                             {plans.length === 0 ? (
-                                <div className="text-center py-12 glassmorphism p-8">
+                                <div className="text-center py-12 card">
                                     <div className="text-6xl mb-6">🎉</div>
-                                    <p className="text-xl font-bold text-primary mb-4">
+                                    <p className="text-xl font-bold gradient-text mb-4">
                                         {viewMode === 'today' ? 'NO QUESTIONS YET!' : 'ALL CLEAR!'}
                                     </p>
-                                    <div className="inline-block px-6 py-3 bg-muted border-4 border-black shadow-[4px_4px_0px_#000]">
+                                    <div className="inline-block px-6 py-3 bg-muted rounded-xl shadow-soft">
                                         <p className="text-foreground font-bold">
                                             {viewMode === 'today'
                                                 ? '⬆️ ADD YOUR FIRST QUEST!'
@@ -390,23 +404,23 @@ export default function Dashboard() {
                                 </div>
                             ) : (
                                 plans.map((plan) => (
-                                    <div key={plan.id} className="pixel-card">
+                                    <div key={plan.id} className="card hover-lift">
                                         <div className="flex flex-col lg:flex-row items-start justify-between gap-6">
                                             <div className="flex-1 min-w-0 w-full">
-                                                <h3 className="font-bold text-xl text-primary mb-4 leading-tight break-words">
-                                                    {plan.problem_title.toUpperCase()}
+                                                <h3 className="font-bold text-xl gradient-text mb-4 leading-tight break-words">
+                                                    {plan.problem_title}
                                                 </h3>
                                                 <div className="flex flex-wrap gap-3 mb-4">
-                                                    <span className="pixel-badge bg-primary text-primary-foreground">
+                                                    <span className="badge badge-primary">
                                                         {plan.topic}
                                                     </span>
-                                                    <span className="pixel-badge bg-muted text-foreground">
+                                                    <span className="badge bg-muted text-foreground">
                                                         {plan.platform}
                                                     </span>
-                                                    <span className={`pixel-badge ${plan.difficulty === 'Easy' ? 'bg-success text-black' : plan.difficulty === 'Medium' ? 'bg-warning text-black' : 'bg-danger text-white'}`}>
+                                                    <span className={`badge ${plan.difficulty === 'Easy' ? 'badge-easy' : plan.difficulty === 'Medium' ? 'badge-medium' : 'badge-hard'}`}>
                                                         {plan.difficulty}
                                                     </span>
-                                                    <span className="pixel-badge bg-card text-primary">
+                                                    <span className="badge bg-card text-primary shadow-soft">
                                                         📅 {plan.planned_date}
                                                     </span>
                                                 </div>
@@ -414,17 +428,17 @@ export default function Dashboard() {
 
                                             <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3 w-full lg:w-auto">
                                                 {plan.status === 'DONE' ? (
-                                                    <div className="pixel-badge bg-success text-black text-center w-full sm:w-auto">
+                                                    <div className="badge badge-easy text-center w-full sm:w-auto px-6 py-3">
                                                         ✅ DONE
                                                     </div>
                                                 ) : plan.status === 'SKIPPED' ? (
                                                     <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center w-full sm:w-auto">
-                                                        <div className="pixel-badge bg-warning text-black text-center">
+                                                        <div className="badge badge-medium text-center px-6 py-3">
                                                             ⏭️ SKIPPED
                                                         </div>
                                                         <button
                                                             onClick={() => markComplete(plan.id)}
-                                                            className="btn bg-success text-black"
+                                                            className="btn btn-success"
                                                         >
                                                             ✅ DONE
                                                         </button>
@@ -433,13 +447,13 @@ export default function Dashboard() {
                                                     <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                                                         <button
                                                             onClick={() => markComplete(plan.id)}
-                                                            className="btn bg-success text-black"
+                                                            className="btn btn-success"
                                                         >
                                                             ✅ DONE
                                                         </button>
                                                         <button
                                                             onClick={() => markSkip(plan.id)}
-                                                            className="btn bg-warning text-black"
+                                                            className="btn btn-warning"
                                                         >
                                                             ⏭️ SKIP
                                                         </button>
