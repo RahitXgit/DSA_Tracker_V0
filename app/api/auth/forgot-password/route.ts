@@ -68,12 +68,28 @@ export async function POST(req: Request) {
             })
         }
 
+
         // Generate secure random token
         const resetToken = crypto.randomBytes(32).toString('hex')
         const expiresAt = new Date()
         expiresAt.setHours(expiresAt.getHours() + 1) // Token expires in 1 hour
 
-        // Store token in database
+        // SECURITY: Invalidate all previous unused tokens for this user
+        // This ensures only the latest reset link works
+        const { error: invalidateError } = await supabaseAdmin
+            .from('password_reset_tokens')
+            .update({ used: true })
+            .eq('user_id', user.id)
+            .eq('used', false)
+
+        if (invalidateError) {
+            console.error('Failed to invalidate old tokens:', invalidateError)
+            // Continue anyway - not critical
+        } else {
+            console.log('Invalidated previous unused tokens for user:', user.id)
+        }
+
+        // Store new token in database
         const { error: tokenError } = await supabaseAdmin
             .from('password_reset_tokens')
             .insert({
@@ -91,6 +107,7 @@ export async function POST(req: Request) {
                 { status: 500 }
             )
         }
+
 
         // Send password reset email
         try {

@@ -12,9 +12,11 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.3",
+    "@types/nodemailer": "^7.0.5",
     "bcryptjs": "^3.0.3",
     "next": "14.2.23",
     "next-auth": "^4.24.13",
+    "nodemailer": "^7.0.12",
     "react": "^18",
     "react-dom": "^18",
     "react-hot-toast": "^2.4.1",

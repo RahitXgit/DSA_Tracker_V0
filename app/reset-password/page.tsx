@@ -12,14 +12,44 @@ function ResetPasswordForm() {
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
     const [loading, setLoading] = useState(false)
+    const [validating, setValidating] = useState(true)
+    const [tokenError, setTokenError] = useState('')
 
     useEffect(() => {
         const tokenParam = searchParams.get('token')
-        if (tokenParam) {
-            setToken(tokenParam)
-        } else {
-            toast.error('Invalid reset link')
+        if (!tokenParam) {
+            setTokenError('Invalid reset link')
+            setValidating(false)
+            return
         }
+
+        setToken(tokenParam)
+
+        // Validate token on page load
+        const validateToken = async () => {
+            try {
+                const response = await fetch('/api/auth/validate-token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: tokenParam })
+                })
+
+                const data = await response.json()
+
+                if (!data.valid) {
+                    setTokenError(data.error || 'Invalid reset link')
+                } else {
+                    setTokenError('')
+                }
+            } catch (error) {
+                console.error('Token validation error:', error)
+                setTokenError('Failed to validate reset link')
+            } finally {
+                setValidating(false)
+            }
+        }
+
+        validateToken()
     }, [searchParams])
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -63,7 +93,19 @@ function ResetPasswordForm() {
         }
     }
 
-    if (!token) {
+    // Show loading while validating token
+    if (validating) {
+        return (
+            <div className="min-h-screen flex items-center justify-center p-6" style={{ background: 'var(--background)' }}>
+                <div className="card max-w-md w-full text-center">
+                    <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-primary mx-auto mb-4"></div>
+                    <p className="text-muted-foreground">Validating reset link...</p>
+                </div>
+            </div>
+        )
+    }
+
+    if (!token || tokenError) {
         return (
             <div className="min-h-screen flex items-center justify-center p-6" style={{ background: 'var(--background)' }}>
                 <div className="card max-w-md w-full text-center">
@@ -74,7 +116,7 @@ function ResetPasswordForm() {
                     </div>
                     <h1 className="text-2xl font-bold mb-2">Invalid Reset Link</h1>
                     <p className="text-muted-foreground mb-6">
-                        This password reset link is invalid or has expired.
+                        {tokenError || 'This password reset link is invalid or has expired.'}
                     </p>
                     <Link href="/forgot-password" className="btn btn-primary">
                         Request New Reset Link

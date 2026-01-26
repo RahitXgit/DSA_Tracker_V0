@@ -6,23 +6,23 @@ const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 // Create a mock admin client for build time
 const createMockAdminClient = () => ({
     from: () => ({
-        select: () => ({
-            eq: () => ({
+        select: (columns?: string) => ({
+            eq: (column: string, value: any) => ({
                 maybeSingle: () => Promise.resolve({ data: null, error: null }),
                 single: () => Promise.resolve({ data: null, error: null }),
             }),
             single: () => Promise.resolve({ data: null, error: null }),
         }),
-        insert: () => ({
+        insert: (data: any) => ({
             select: () => ({
                 single: () => Promise.resolve({ data: null, error: null }),
             }),
         }),
-        update: () => ({
-            eq: () => Promise.resolve({ data: null, error: null }),
+        update: (data: any) => ({
+            eq: (column: string, value: any) => Promise.resolve({ data: null, error: null }),
         }),
         delete: () => ({
-            eq: () => Promise.resolve({ data: null, error: null }),
+            eq: (column: string, value: any) => Promise.resolve({ data: null, error: null }),
         }),
     }),
     auth: {
