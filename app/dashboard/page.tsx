@@ -300,21 +300,22 @@ export default function Dashboard() {
         <div className="min-h-screen">
             <Navbar user={user} signOut={signOut} username={username} />
 
-            <div className="max-w-6xl mx-auto p-6">
+            <div className="max-w-6xl mx-auto px-4 md:px-6 py-4 md:py-6">
                 {/* Planner Form */}
-                <div className="glassmorphism p-8 mb-8">
-                    <div className="flex items-center gap-4 mb-6">
-                        <span className="text-5xl">📅</span>
-                        <h2 className="text-2xl font-bold gradient-text">Today's Plan</h2>
+                <div className="glassmorphism p-4 md:p-8 mb-6 md:mb-8">
+                    <div className="flex items-center gap-3 md:gap-4 mb-4 md:mb-6">
+                        <span className="text-4xl md:text-5xl">📅</span>
+                        <h2 className="text-xl md:text-2xl font-bold gradient-text">Today's Plan</h2>
                     </div>
 
-                    <form onSubmit={addPlan} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                    <form onSubmit={addPlan} className="space-y-3 md:space-y-0 md:grid md:grid-cols-2 md:gap-4 mb-6 md:mb-8">
                         <input
                             type="text"
                             placeholder="Problem title (ex: Two Sum)"
                             value={newPlan.problem_title}
                             onChange={(e) => setNewPlan({ ...newPlan, problem_title: e.target.value })}
                             required
+                            className="w-full"
                         />
                         <input
                             type="text"
@@ -322,10 +323,12 @@ export default function Dashboard() {
                             value={newPlan.topic}
                             onChange={(e) => setNewPlan({ ...newPlan, topic: e.target.value })}
                             required
+                            className="w-full"
                         />
                         <select
                             value={newPlan.platform}
                             onChange={(e) => setNewPlan({ ...newPlan, platform: e.target.value })}
+                            className="w-full"
                         >
                             <option>LeetCode</option>
                             <option>GFG</option>
@@ -336,6 +339,7 @@ export default function Dashboard() {
                         <select
                             value={newPlan.difficulty}
                             onChange={(e) => setNewPlan({ ...newPlan, difficulty: e.target.value })}
+                            className="w-full"
                         >
                             <option>Easy</option>
                             <option>Medium</option>
@@ -343,7 +347,7 @@ export default function Dashboard() {
                         </select>
                         <button
                             type="submit"
-                            className="md:col-span-2 btn btn-primary"
+                            className="w-full md:col-span-2 btn btn-primary"
                         >
                             ➕ Add Question to Today
                         </button>
@@ -352,15 +356,15 @@ export default function Dashboard() {
 
 
                     {/* Today/Tomorrow Tabs */}
-                    <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                    <div className="flex flex-col sm:flex-row gap-3 md:gap-4 mb-4 md:mb-6">
                         <button
                             onClick={() => {
                                 setViewMode('today')
                                 fetchPlans('today')
                             }}
-                            className={`flex-1 px-6 py-4 font-bold text-base transition-all rounded-xl ${viewMode === 'today'
-                                ? 'gradient-primary text-white shadow-large'
-                                : 'bg-card text-muted-foreground shadow-soft hover:shadow-medium hover:scale-[1.02]'
+                            className={`flex-1 px-4 md:px-6 py-3 md:py-4 font-bold text-sm md:text-base transition-all rounded-xl ${viewMode === 'today'
+                                    ? 'gradient-primary text-white shadow-large'
+                                    : 'bg-card text-muted-foreground shadow-soft hover:shadow-medium active:scale-[0.98]'
                                 }`}
                         >
                             📅 TODAY ({todayCount})
@@ -370,9 +374,9 @@ export default function Dashboard() {
                                 setViewMode('tomorrow')
                                 fetchPlans('tomorrow')
                             }}
-                            className={`flex-1 px-6 py-4 font-bold text-base transition-all rounded-xl ${viewMode === 'tomorrow'
-                                ? 'gradient-secondary text-white shadow-large'
-                                : 'bg-card text-muted-foreground shadow-soft hover:shadow-medium hover:scale-[1.02]'
+                            className={`flex-1 px-4 md:px-6 py-3 md:py-4 font-bold text-sm md:text-base transition-all rounded-xl ${viewMode === 'tomorrow'
+                                    ? 'gradient-secondary text-white shadow-large'
+                                    : 'bg-card text-muted-foreground shadow-soft hover:shadow-medium active:scale-[0.98]'
                                 }`}
                         >
                             ⏭️ TOMORROW ({tomorrowCount})
@@ -405,55 +409,55 @@ export default function Dashboard() {
                             ) : (
                                 plans.map((plan) => (
                                     <div key={plan.id} className="card hover-lift">
-                                        <div className="flex flex-col lg:flex-row items-start justify-between gap-6">
+                                        <div className="flex flex-col gap-4">
                                             <div className="flex-1 min-w-0 w-full">
-                                                <h3 className="font-bold text-xl gradient-text mb-4 leading-tight break-words">
+                                                <h3 className="font-bold text-lg md:text-xl gradient-text mb-3 md:mb-4 leading-tight break-words">
                                                     {plan.problem_title}
                                                 </h3>
-                                                <div className="flex flex-wrap gap-3 mb-4">
-                                                    <span className="badge badge-primary">
+                                                <div className="flex flex-wrap gap-2 md:gap-3 mb-3 md:mb-4">
+                                                    <span className="badge badge-primary text-xs md:text-sm">
                                                         {plan.topic}
                                                     </span>
-                                                    <span className="badge bg-muted text-foreground">
+                                                    <span className="badge bg-muted text-foreground text-xs md:text-sm">
                                                         {plan.platform}
                                                     </span>
-                                                    <span className={`badge ${plan.difficulty === 'Easy' ? 'badge-easy' : plan.difficulty === 'Medium' ? 'badge-medium' : 'badge-hard'}`}>
+                                                    <span className={`badge text-xs md:text-sm ${plan.difficulty === 'Easy' ? 'badge-easy' : plan.difficulty === 'Medium' ? 'badge-medium' : 'badge-hard'}`}>
                                                         {plan.difficulty}
                                                     </span>
-                                                    <span className="badge bg-card text-primary shadow-soft">
+                                                    <span className="badge bg-card text-primary shadow-soft text-xs md:text-sm">
                                                         📅 {plan.planned_date}
                                                     </span>
                                                 </div>
                                             </div>
 
-                                            <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3 w-full lg:w-auto">
+                                            <div className="flex flex-col gap-2 w-full">
                                                 {plan.status === 'DONE' ? (
-                                                    <div className="badge badge-easy text-center w-full sm:w-auto px-6 py-3">
+                                                    <div className="badge badge-easy text-center w-full px-4 md:px-6 py-2 md:py-3 text-sm md:text-base">
                                                         ✅ DONE
                                                     </div>
                                                 ) : plan.status === 'SKIPPED' ? (
-                                                    <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center w-full sm:w-auto">
-                                                        <div className="badge badge-medium text-center px-6 py-3">
+                                                    <div className="flex flex-col sm:flex-row gap-2 md:gap-3 items-stretch w-full">
+                                                        <div className="badge badge-medium text-center px-4 md:px-6 py-2 md:py-3 text-sm md:text-base">
                                                             ⏭️ SKIPPED
                                                         </div>
                                                         <button
                                                             onClick={() => markComplete(plan.id)}
-                                                            className="btn btn-success"
+                                                            className="flex-1 btn btn-success text-sm md:text-base"
                                                         >
                                                             ✅ DONE
                                                         </button>
                                                     </div>
                                                 ) : (
-                                                    <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                                                    <div className="flex flex-col sm:flex-row gap-2 md:gap-3 w-full">
                                                         <button
                                                             onClick={() => markComplete(plan.id)}
-                                                            className="btn btn-success"
+                                                            className="flex-1 btn btn-success text-sm md:text-base"
                                                         >
                                                             ✅ DONE
                                                         </button>
                                                         <button
                                                             onClick={() => markSkip(plan.id)}
-                                                            className="btn btn-warning"
+                                                            className="flex-1 btn btn-warning text-sm md:text-base"
                                                         >
                                                             ⏭️ SKIP
                                                         </button>

@@ -59,15 +59,15 @@ export default function Login() {
 
     return (
         <div className="min-h-screen flex items-center justify-center p-4">
-            <div className="glassmorphism p-10 w-full max-w-lg">
-                <div className="text-center mb-8">
-                    <div className="flex flex-col items-center justify-center gap-4 mb-4">
-                        <span className="text-6xl">🎮</span>
-                        <h1 className="text-3xl font-bold gradient-text text-center">
+            <div className="glassmorphism p-6 md:p-10 w-full max-w-lg">
+                <div className="text-center mb-6 md:mb-8">
+                    <div className="flex flex-col items-center justify-center gap-3 md:gap-4 mb-3 md:mb-4">
+                        <img src="/logo.png" alt="DSA Tracker" className="w-16 h-16 md:w-20 md:h-20" />
+                        <h1 className="text-2xl md:text-3xl font-bold gradient-text text-center">
                             DSA Tracker
                         </h1>
                     </div>
-                    <p className="text-foreground font-semibold text-center">Plan. Track. Master DSA.</p>
+                    <p className="text-foreground font-semibold text-sm md:text-base text-center">Plan. Track. Master DSA.</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
@@ -127,12 +127,12 @@ export default function Login() {
                     </button>
                 </form>
 
-                <div className="text-center mt-8">
+                <div className="text-center mt-6 md:mt-8">
                     <button
                         type="button"
                         onClick={() => setIsLogin(!isLogin)}
                         disabled={loading}
-                        className="text-secondary hover:gradient-text font-bold transition-all"
+                        className="text-secondary hover:gradient-text font-bold transition-all text-sm md:text-base"
                     >
                         {isLogin ? "Don't have an account? Sign Up" : 'Already have an account? Login'}
                     </button>
